@@ -1,0 +1,576 @@
+# PL/SQL
+
+- Oracle's Procedural Language extension to SQL
+
+- 오라클에서 제공하는 SQL을 확장한 절차적 프로그래밍언어
+
+- 블록단위 구조
+
+  - 선언부(DECLARE), 실행부(BEGIN ... END), 예외처리부(EXCEPTION)로 구성
+
+    ```plsql
+    DECLARE -- 선택
+    	-- 변수, 상수, 커서, 사용자 지정 예외 선언
+    BEGIN -- 필수
+    	-- SQL문
+    	-- PL/SQL 제어 문장
+    EXCEPTION -- 선택
+    	-- 에러 발생 시 수행되는 부분
+    END; -- 필수
+    ```
+
+- 블록 유형
+
+  - 익명, 프로시저, 함수, 패키지, 트리거
+
+- PL/SQL 결과 출력
+
+  ```sql
+  SQL> SET SERVEROUTPUT ON; -- 결과를 보기 위해 'ON'으로 설정
+  -- SHOW SERVEROUTPUT 로 현재 상태 확인 가능
+  SQL>  
+  BEGIN
+      DBMS_OUTPUT.PUT_LINE(‘HELLO’);
+  END;
+  -- 결과: HELLO
+  ```
+
+- PL/SQL 데이터 타입
+
+  - SQL 제공 모든 데이터 타입
+
+  - PL/SQL 추가 데이터 타입
+
+    - BOOLEAN
+
+    - BINARY_INTEGER, NATURAL, POSITIVE
+
+    - %TYPE
+
+      - 이미 선언된 다른 변수나 데이터베이스 컬럼의 데이터 타입을 이용하여 선언
+
+      - %TYPE앞에 올 수 있는 것은 데이터베이스 테이블과 컬럼 그리고  이미 선언한 변수명
+
+        ```PLSQL
+        v_empno emp.empno%TYPE;
+        -- v_empno의 데이터 타입: emp 테이블의 empno컬럼의 데이터 타입
+        ```
+
+    - %ROWTYPE
+
+      - 특징
+        - 테이블이나 뷰 내부의 컬럼 집합의 이름, 데이터 타입, 크기, 속성을 그대로 사용하여 선언
+        - %ROWTYPE앞에 오는 것은 테이블명
+      - 장점
+        - 컬럼들의 수나 데이터 타입을 모를 때 편리
+        - 해당 컬럼들의 수나 데이터 타입이 변경될 경우 수정하지 않아도 됨
+        - SELECT문을 이용하여 하나의 행을 조회할 때 편리
+
+    - PL/SQL 테이블과 레코드
+
+  - 데이터 타입의 유형
+
+    - Scalar 데이터 타입
+      - 단순 데이터 형으로 하나의 데이터 값을 저장하는 데이터 타입
+      - ex. NUMBER, LONG, VARCAHR...
+    - Composite 데이터 타입
+      - 하나 이상의 데이터 값을 가지는 데이터 타입
+      - 배열과 유사한 역할
+      - PL/SQL 테이블과 레코드, %ROWTYPE
+    - 참조 데이터 타입
+
+- 변수 선언
+
+  ```plsql
+  name [CONSTANT] data_type [NOT NULL] [:=초기값];
+  ```
+
+  - name: 변수나 상수의 이름
+  - CONSTANT : 식별자가 그 값이 변할 수 없도록 선언, 반드시 초기화
+  - data_type: 스칼라 또는 복합 데이터 타입 선언 시 사용
+  - NOT NULL : NOT NULL로 제한된 변수는 반드시 초기화 
+  - 초기값을 정의하지 않으면 식별자는 NULL 값을 가짐
+
+- PL/SQL의 제어 구조
+
+  - 조건 제어
+
+    - IF-THEN-ELSE
+
+      ```plsql
+      IF condition THEN
+      	statements;
+      [ELSEIF condition THEN
+      	statements;]
+      [ELSE
+       	statements;]
+      END IF;
+      ```
+
+      ```plsql
+      DECLARE  	
+      	sMonth	CHAR(2);
+      BEGIN
+      	SELECT  TO_CHAR(SYSDATE, 'MM')
+      	INTO 	sMonth
+        	FROM	DUAL;
+      
+           IF ( sMonth>='03'  AND  sMonth<='08' )  THEN 
+                 DBMS_OUTPUT.PUT_LINE('1학기');
+        	ELSE
+           	     DBMS_OUTPUT.PUT_LINE('2학기');
+        	END IF;  
+      END;
+      ```
+
+      
+
+  - 반복 제어
+
+    - LOOP
+
+      ```plsql
+      LOOP           
+          statements;
+            ... 
+      EXIT [WHEN condition];
+      END LOOP; 
+      ```
+
+      ```PLSQL
+      DECLARE  	
+      	i  		NUMBER  := 0;
+      	nSum	NUMBER  := 0;
+      BEGIN
+      	LOOP
+      		 i 	:= i + 1; 
+      		nSum	:= nSum + i;
+      		EXIT WHEN  i >= 100;
+      	END LOOP;
+      
+      	DBMS_OUTPUT.PUT_LINE(‘1~100까지의 합 : ‘ || TO_CHAR(nSum));
+      END;
+      
+      ```
+
+    - FOR-LOOP
+
+      ```plsql
+      FOR index in [REVERSE] 시작값..끝값 LOOP           
+          statements;
+           ...   
+      END LOOP; 
+      ```
+
+      ```plsql
+      DECLARE  	
+      	i   		NUMBER  := 0;
+      	nSum	NUMBER  := 0;
+      BEGIN
+      	FOR i IN 1..100 LOOP
+       		nSum	:= nSum + i;
+      	END LOOP;
+      
+      	DBMS_OUTPUT.PUT_LINE(‘1~100까지의 합 : ‘ || TO_CHAR(nSum));
+      END;
+      ```
+
+      
+
+    - WHILE-LOOP
+
+      ```plsql
+      WHILE condition LOOP           
+          statements;
+           ... 
+      END LOOP; 
+      ```
+
+      ```plsql
+      DECLARE  	
+      	i   		NUMBER   := 0;
+      	nSum	NUMBER   := 0;
+      BEGIN
+      	WHILE i < 100 LOOP
+      		 i 	:=  i + 1;
+       		nSum	:= nSum + i;
+      	END LOOP;
+      
+      	DBMS_OUTPUT.PUT_LINE(‘1~100까지의 합 : ‘ || TO_CHAR(nSum));
+      END;
+      ```
+
+  - 순차 제어
+
+    - GOTO
+
+      - 제어가 건너 뛰는 곳을 지정하는 레이블과 함께 사용
+
+        ```plsql
+        DECLARE
+        i 	NUMBER;
+        BEGIN
+        FOR i IN 1..50 LOOP
+        		IF  i = 30 THEN
+        			GOTO  my_label;
+           		END IF;
+        END LOOP;
+        
+        <<my_label>>
+        DBMS_OUTPUT.PUT_LINE('i = 30');
+        END;
+        ```
+
+    - NULL: 실행하지 않음을 나타냄
+
+      ```plsql
+      DECLARE
+      	   i 		NUMBER := 0;
+      	   nValue	NUMBER := 0;
+      BEGIN
+      FOR i IN 0..100 LOOP
+      		nValue := 1000/i;
+      END LOOP;
+      EXCEPTION
+       	   WHEN ZERO_DIVIDE THEN
+      		NULL;
+      END;
+      ```
+
+- 예제 자료
+
+  ```SQL
+  CREATE TABLE SHOP
+  (SHOP_NO INTEGER CONSTRAINT PK_SHOP PRIMARY KEY,
+  SHOP_NAME VARCHAR2(30));
+  
+  INSERT INTO SHOP VALUES (1015,'초콜릿공장');
+  INSERT INTO SHOP VALUES (1016,'사탕공장');
+      
+  DESC SHOP;
+  SELECT * FROM SHOP;
+  ```
+
+  
+
+- PL/SQL문 내에서의 SQL문
+
+  - SELECT문
+
+    ```sql
+    SELECT	select_list
+    INTO		variable_name | record_name
+    FROM	    	table
+    WHERE	condition;
+    ```
+
+    - 반드시 하나의 행만을 추출
+
+    - 추출되는 데이터 행이 없거나 하나를 초과할 경우 예외 발생
+
+    - TOO_MANY_ROWS : 하나 이상의 데이터 행 추출 시
+
+      ```PLSQL
+      DECLARE
+      	v_no	     shop.shop_no%TYPE;
+      	v_name	     shop.shop_name%TYPE;
+      BEGIN
+            SELECT      shop_no, shop_name
+            INTO	     v_no, v_name
+            FROM	     shop;
+      
+           DBMS_OUTPUT.PUT_LINE('상점번호: ' || v_no);
+           DBMS_OUTPUT.PUT_LINE('상점이름: ' || v_name);
+      END;
+      ```
+
+    - NO_DATA_FOUND : 어떤 데이터도 추출하지 못할 때
+
+      ```PLSQL
+      DECLARE
+      	v_no	   shop.shop_no%TYPE;
+      	v_name    shop.shop_name%TYPE;
+      BEGIN
+            SELECT    shop_no, shop_name
+            INTO	  v_no, v_name
+            FROM	  shop
+            WHERE    shop_no=1000;
+      
+           DBMS_OUTPUT.PUT_LINE('상점번호: ' || v_no);
+           DBMS_OUTPUT.PUT_LINE('상점이름: ' || v_name);
+      END;
+      
+      ```
+
+    - 다수 개의 데이터 행을 하나씩 추출할 때는 명시적 커서 사용
+
+  - INSERT문
+
+    - SQL문과 동일
+
+      1. 사탕 공장의 SHOP_NO를 가져와서 V_NO에 저장
+      2. 해당 V_NO + 1을 새로운 SHOP_NO로 지정하고 SHOP_NAME은 사탕 공장을 그대로 가져
+
+      ```plsql
+      DECLARE
+      	v_no	shop.shop_no%TYPE;
+      	v_name   shop.shop_name%TYPE;
+      BEGIN
+             SELECT   shop_no, shop_name
+             INTO	    v_no, v_name
+             FROM	    shop
+             WHERE	shop_name = '사탕공장';
+      
+             INSERT INTO shop (shop_no, shop_name)
+             VALUES (v_no+1, v_name);
+      END;
+      ```
+
+  - UPDATE문
+
+    - SQL문과 동일
+
+      1. 바꿀 이름을 V_NAME에 저장
+      2. SHOP_NAME이 사탕공장인 데이터를 V_NAME으로 변
+
+      ```PLSQL
+      DECLARE
+      	v_name    shop.shop_name%TYPE;
+      BEGIN
+              v_name :='새로운사탕공장';
+              UPDATE	shop
+              SET 	shop_name=v_name
+              WHERE 	shop_name='사탕공장';
+      END;
+      ```
+
+  - DELETE문
+
+    - SQL문과 동일
+
+      ```PLSQL
+      BEGIN
+      	DELETE FROM shop
+          WHERE shop_name = '초콜릿공장';
+      END;
+      ```
+
+- 프로시저(함수) 사용 이유
+
+  - 정보 캡슐화
+  - 기능의 재사용
+  - 트랜잭션 제어
+  - 데이터베이스 내에서 미리 컴파일 되어 저장되므로 필요할 때마다 매번 다시 변환해야하는 sql문보다 빠르게 실행
+  - 저장 프로시저에서 발생하는 문법 오류는 실행시간이 아닌 컴파일할 때 바로 잡을 수 있음
+
+- Procedure
+
+  - 생성
+
+    - CREATE OR REPLACE 구문을 사용하여 생성
+
+    - IS 로 PL/SQL의 블록 시작 
+
+    - 프로시저를 끝마칠 때는 “/”를 지정
+
+    - LOCAL 변수는 IS 와 BEGIN 사이에 선언 
+
+      ```plsql
+      CREATE [OR REPLACE] PROCEDURE procedure name 
+         IN argument 
+         OUT argument 
+         INOUT argument 
+      IS 
+         [변수 선언]
+      BEGIN   -- 필수 
+         [PL/SQL Block] 
+         -- SQL문장, PL/SQL제어 문장 
+         [EXCEPTION]  --> 선택
+        -- error가 발생할 때 수행하는 문장
+      END;   -- 필수 
+      ```
+
+  - 실행
+
+    - EXECUTE 프로시저;
+    - EXEC 프로시저;
+
+  - 프로시저 에러 검사
+
+    - SHOW ERROR
+
+  - 삭제
+
+    - DROP PROCEDURE 프로시저명
+
+  - 특징
+
+    - 실행 환경과 프로그램 사이에 값을 주고 받는 역할
+    - 블록 안에서의 변수와 똑같이 일시적으로 값을 저장하는 역할
+
+  - 파라미터 종류
+
+    - IN 
+      - 실행환경에서 프로그램으로 값을 전달
+      - 상수, 수식 또는 초기화된 변수 사용
+      - 디폴트, 생략 가능
+    - OUT
+      - 프로그램으로부터 실행환경으로 값을 전달
+      - 초기화되지 않은 변수를 매개변수로 사용
+    - INOUT
+      - 실행환경에서 프로그램으로 값을 전달하고, 다시 프로그램으로부터 실행환경으로 변경된 값을 전달
+      - 초기화된 변수를 사용
+
+- Function
+
+  - 프로시저와의 차이점 및 특징
+
+    - 결과값 리턴
+    - 대부분 구성이 프로시저와 유사하지만 IN 파라미터만 사용  가능
+    - 리턴 될 값의 데이터 타입을 RETURN문에 선언
+    - PL/SQL블록 내에서 RETURN문을 통해서 반드시 값을 반환해야 함
+
+  - 생성
+
+    - CREATE OR REPLACE 구문을 사용하여 생성
+    - IS 로 PL/SQL의 블록 시작 
+    - LOCAL 변수는 IS 와 BEGIN 사이에 선언 
+    - 함수를 끝마칠 때는 “/”를 지정
+
+    ```plsql
+    CREATE [OR REPLACE] FUNCTION function name 
+          [(argument...)] 
+      RETURN  datatype 
+       -- datatype은 반환되는 값의 datatype
+    IS 
+       [변수 선언 부분]
+    BEGIN
+      [PL/SQL Block] 
+        -- PL/SQL 블록에는 적어도 한 개의 RETURN 문이 있어야 함
+    END;
+    ```
+
+  - 실행
+
+    - 함수의 리턴 값을 저장할 변수 선언
+    - EXECUTE :변수명 := 함수명
+    - PRINT 변수명
+
+  - 함수 에러 검사
+
+    - SHOW ERROR
+
+  - 삭제
+
+    - DROP FUNCTION 함수명
+
+- Trigger
+
+  - 데이터베이스에 특정한 변경이 가해졌을 때 DBMS가 이에 대응해서 자동적으로 호출하는 일종의 프로시저
+
+  - 프로시저와 함수는 그 실행이 외부적인 실행 명령에 의해 이루어지는데 반해, 트리거의 실행은 트리거링 사건(Triggering Event)에 의해 내부적으로 이루어짐
+
+  - 트리거를 일으키는 사건(event)
+
+    - 데이터베이스 테이블에 DML 문이 발생할 때
+
+  - INSERT, UPDATE, DELETE문의 사용에 사건을 정의할 수 있으며 이들을 실행할 때 정의된 트리거도 자동 실행
+
+  - 테이블과 별도로 데이터베이스에 저장
+
+  - 뷰가 아니라 테이블에 대해서만 정의
+
+  - 구성
+
+    - 사건(event) : 트리거를 가동
+
+    - 조건(condition) : 트리거 수행 여부 검사
+
+    - 동작 (action) : 트리거가 수행될 때 일어나는 일
+
+    - 예시
+
+      ```plsql
+      CREATE TRIGGER incr_count 
+         BEFORE INSERT ON student       -- 사건
+         FOR EACH ROW                       
+         WHEN (:new.age < 18)                  -- 조건
+         BEGIN                                            -- 동작
+            DBMS_OUTPUT.PUT_LINE('미성년자 : ' || :new.ename);
+         END;
+      ```
+
+  - 용도
+
+    - 이블 생성시 참조 무결성과 데이터 무결성 그 밖의 다른 제약 조건으로 정의할 수 없는 복잡한 요구 사항에 대한 제약조건을 생성할 수 있다.
+    - 테이블의 데이터에 생기는 작업을 감시, 보안할 수 있다.
+    - 테이블에 생기는 변화에 따라 필요한 다른 프로그램을 실행시킬 수 있다.
+
+  - 생성
+
+    ```plsql
+    CREATE [OR REPLACE] TRIGGER trigger_name 
+    BEFORE|AFTER trigger_event ON table_name
+    [FOR EACH ROW]
+    [WHEN (condition)]
+    PL/SQL block
+    ```
+
+    - BEFORE: INSERT, UPDATE, DELETE 문이 실행되기 전 트리거 실행
+    - AFTER: INSERT, UPDATE, DELETE 문이 실행된 후 트리거 실행
+    - trigger_event: INSERT, UPDATE, DELETE 중 한 개 이상
+    - FOR EACH ROW: 트리거
+
+  - 문장 트리거(Statement-Level Trigger)
+
+    - 트리거링 사건에 의해 단 한 번 실행
+    - 컬럼의 각 데이터 행 제어 불가능
+    - 컬럼의 데이터 값에 상관없이 그 컬럼에 변화가 일어남을 감지하여실행되는 트리거
+
+  - 행 트리거(Row-Level Trigger)
+
+    - 컬럼의 각각의 데이터 행에 변화가 생길 때마다 실행
+    - 변화가 생긴 데이터 행의 실제 값 제어 가능
+    - 데이터 행의 실제 값을 수정, 변경 또는 저장할 때  사용
+
+  - 행 트리거(Row-Level Trigger)의 컬럼 값 참조
+
+    - “:old”, “:new” 연산자 사용
+    - INSERT 문
+      - 입력할 데이터 값은  :new.column_name 으로 참조 (단, column_name은 테이블의 컬럼 이름)
+    - UPDATE 문
+      - 변경하기 전 컬럼 데이터 값은  :old.column_name 으로 참조
+      - 수정할 새로운 데이터 값은  :new.column_name 으로 참조
+    - DELETE 문
+      - 삭제되는 데이터 값은  :old.column_name 으로 참조
+
+  - 트리거 예
+
+    ```plsql
+    SQL> CREATE OR REPLACE TRIGGER trigger_test
+    BEFORE
+    UPDATE ON dept
+    FOR EACH ROW
+    BEGIN
+    	DBMS_OUTPUT.PUT_LINE('변경 전 컬럼 값 : ' || :old.dname);
+    	DBMS_OUTPUT.PUT_LINE('변경 후 컬럼 값 : ' || :new.dname);
+    END;
+    /
+    
+    SQL> SET SERVEROUTPUT ON ; 
+    
+    SQL> UPDATE dept
+    SET dname = '총무부'
+    WHERE deptno = 30
+    
+    -- UPDATE문 실행 전  트리거링 발생
+    -- 출력 결과
+    변경 전 컬럼 값 : 인사과
+    변경 후 컬럼 값 : 총무부
+    
+    1 행이 갱신되었습니다.
+    ```
+
+    
+
+    ​    
